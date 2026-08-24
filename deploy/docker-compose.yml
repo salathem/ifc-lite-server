@@ -1,0 +1,66 @@
+# Beispiel-Stack fuer Unraid (Dockge oder Compose Manager Plus).
+# Passt zum Pfad aus website/docs/VIEWER-UNRAID.md: kein Portmapping nach
+# aussen, Erreichbarkeit ausschliesslich ueber den Cloudflare-Tunnel im
+# Docker-Netz `trassia`.
+#
+# Public Hostname im Cloudflare-Tunnel z. B.:
+#   ifc-api.trassia.com  ->  http://trassia-ifc-server:8080
+#
+# Image vorher per GitHub Actions bauen lassen (siehe README).
+
+services:
+  ifc-server:
+    image: ghcr.io/salathem/ifc-lite-server:latest
+    container_name: trassia-ifc-server
+    restart: unless-stopped
+    networks:
+      - trassia
+    # Bewusst KEIN ports-Mapping: nur cloudflared und andere Container im Netz
+    # `trassia` duerfen den Dienst sehen.
+    environment:
+      PORT: "8080"
+      RUST_LOG: "info"
+      # Obergrenze Upload; runter setzen, wenn der Server wenig RAM hat.
+      MAX_FILE_SIZE_MB: "500"
+      # An die zugeteilten Kerne anpassen.
+      WORKER_THREADS: "4"
+      CACHE_DIR: "/app/cache"
+      CACHE_MAX_AGE_DAYS: "7"
+      REQUEST_TIMEOUT_SECS: "300"
+      # WICHTIG: Default waeren localhost-Dev-Origins. Fuer den Viewer setzen,
+      # sonst blockiert der Browser die Requests.
+      CORS_ORIGINS: "https://viewer.trassia.com"
+      # Optional, sobald der Dienst nicht mehr rein intern ist:
+      # IFC_SERVER_API_TOKEN: "<geheim, per .env>"
+      # IFC_METRICS_ENABLED: "1"
+    volumes:
+      - ifc-cache:/app/cache
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Root-Dateisystem schreibgeschuetzt. Alles Schreibbare ist explizit:
+    # der Cache im Volume, /tmp als tmpfs. Falls der Container damit doch
+    # nicht startet (Logs pruefen), read_only auf false setzen.
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          # Setzt zugleich das cgroup-Limit, aus dem der Server sein
+          # Speicherbudget fuer die Admission-Control ableitet.
+          memory: 6g
+
+volumes:
+  ifc-cache:
+
+networks:
+  trassia:
+    external: true
