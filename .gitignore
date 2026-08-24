@@ -1,0 +1,21 @@
+# Rust
+target/
+**/target/
+*.rs.bk
+
+# Node (nur falls je ein Client-SDK dazukommt)
+node_modules/
+npm-debug.log*
+
+# Lokale Umgebung / Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

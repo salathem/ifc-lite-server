@@ -1,0 +1,4 @@
+# Keine EOL-Konvertierung. Der vendorierte Upstream-Baum unter upstream/ muss
+# byte-identisch zum Original bleiben (LF), sonst weicht er von LTplus-AG/ifc-lite
+# ab und der Docker-Build bekommt CRLF-Zeilen in Dockerfile/Shell-Skripten.
+* -text
