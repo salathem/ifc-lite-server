@@ -8,8 +8,11 @@ wenn Browser-Parsing bei grossen Modellen zu langsam wird").
 ## Warum dieses Repo ueberhaupt existiert
 
 Das Briefing nennt `ghcr.io/ltplus-ag/ifc-lite-server` als fertiges Image. Dieses Package
-ist jedoch **nicht oeffentlich** — ein anonymer Pull liefert `401 Unauthorized` (geprueft
-am 2026-08-24). Der Quellcode ist offen (MPL-2.0), also bauen wir das Image selbst:
+ist jedoch **nicht oeffentlich**: ein anonymer Manifest-Abruf gegen
+`ghcr.io/v2/ltplus-ag/ifc-lite-server/manifests/latest` antwortet `403` (ein bekannt
+oeffentliches Image antwortet an derselben Stelle `200`), `docker pull` meldet
+entsprechend `unauthorized`. Geprueft am 2026-08-24.
+Der Quellcode ist offen (MPL-2.0), also bauen wir das Image selbst:
 
 - `upstream/` = unveraenderter Teilbaum von `LTplus-AG/ifc-lite`
   (Commit `329bf8c7`, Version 5.0.0) — siehe [NOTICE.md](NOTICE.md)
@@ -43,6 +46,10 @@ Eckdaten des Builds:
   Container laeuft und dessen `CARGO_HOME` nie auf dem Runner liegt.
 - Der erste (kalte) Build kompiliert den ganzen Rust-Workspace und dauert entsprechend
   lange (Groessenordnung 30-90 Minuten auf einem Standard-Runner). Danach Minuten.
+- Ein zweiter, **nicht blockierender** Job laesst `hadolint` ueber das Dockerfile laufen.
+  Er ist bewusst nur informativ, weil das Dockerfile unveraendert vom Upstream stammt —
+  und weil auf der Arbeitsmaschine weder Docker noch hadolint installiert sind, ist die
+  CI die einzige Stelle, an der es ueberhaupt geprueft werden kann.
 
 Rechte im Workflow: `contents: read`, `packages: write`; Login mit dem
 automatischen `GITHUB_TOKEN`, keine zusaetzlichen Secrets noetig.
