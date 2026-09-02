@@ -1,5 +1,23 @@
 # ifc-lite-server (Trassia-Build)
 
+## Retired (archived 2026-09-02)
+This backend is **not in use**. The Trassia viewer (https://viewer.trassia.com)
+parses IFC in the browser (WASM); the deployed image is built with
+`VITE_USE_SERVER=false` and its nginx answers a hard **404 for `/api/*`**.
+
+Reactivating this server is a deliberate three-part change, not just a
+container start (security decision K2, 2026-09-01):
+1. Run the server with `IFC_SERVER_API_TOKEN` set — upstream authentication is
+   OFF by default; without a token every parse endpoint is anonymous.
+2. Rebuild the viewer image with the build arg `VITE_USE_SERVER=true` — only
+   that build contains the `/api/` proxy (`docker/api-proxy.conf` in
+   `salathem/trassia-viewer`).
+3. Add an edge rate limit for `/api/*` (Cloudflare).
+
+The commented service block in `salathem/trassia-viewer` →
+`deploy/docker-compose.yml` documents the required environment.
+
+
 Eigener Container-Build des **IFC-Lite-Servers** (Rust, MPL-2.0) als Backend fuer den
 Trassia-IFC-Viewer. Er uebernimmt das Parsen und Meshen grosser IFC-Modelle, damit der
 Browser nicht alles selbst rechnen muss (Briefing §5: "optionaler Server-Container, erst
